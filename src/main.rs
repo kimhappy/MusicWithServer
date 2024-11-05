@@ -24,13 +24,13 @@ struct TokenResponse {
 #[get("/login")]
 fn login() -> Result< Redirect, String > {
     let scope  = "user-read-private user-read-email";
-    let state  = &util::random_string(16);
+    let state  = util::random_string(16);
     let params = [
         ("response_type", "code"              ),
         ("client_id"    , &CLIENT_ID          ),
         ("redirect_uri" , &REDIRECT_SERVER_URI),
         ("scope"        , scope               ),
-        ("state"        , state               )
+        ("state"        , &state              )
     ];
     let qs           = serde_urlencoded::to_string(params).unwrap();
     let auth_url     = format!("https://accounts.spotify.com/authorize?{}", qs);
@@ -45,10 +45,11 @@ async fn callback(code: &str, state: &str) -> Result< Redirect, String > {
         ("code"        , code                ),
         ("redirect_uri", &REDIRECT_SERVER_URI)
     ];
+    let auth_str       = format!("{}:{}", *CLIENT_ID, *CLIENT_SECRET);
     let client         = reqwest::Client::new();
     let token_response = client
         .post("https://accounts.spotify.com/api/token")
-        .header("Authorization", format!("Basic {}", base64::encode(&format!("{}:{}", *CLIENT_ID, *CLIENT_SECRET))))
+        .header("Authorization", format!("Basic {}", auth_str))
         .header("Content-Type", "application/x-www-form-urlencoded")
         .form(&params)
         .send()
