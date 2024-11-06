@@ -45,7 +45,7 @@ async fn callback(code: &str, state: &str) -> Result< Redirect, String > {
         ("code"        , code                ),
         ("redirect_uri", &REDIRECT_SERVER_URI)
     ];
-    let auth_str       = format!("{}:{}", *CLIENT_ID, *CLIENT_SECRET);
+    let auth_str       = base64::encode(format!("{}:{}", *CLIENT_ID, *CLIENT_SECRET));
     let client         = reqwest::Client::new();
     let token_response = client
         .post("https://accounts.spotify.com/api/token")
