@@ -75,7 +75,7 @@ async fn callback(code: &str, state: &str) -> Result< Redirect, String > {
 
 #[launch]
 fn rocket() -> _ {
-    dotenv::dotenv().ok();
+    dotenvy::dotenv().ok();
 
     rocket::build()
         .mount("/", routes![login, callback])
