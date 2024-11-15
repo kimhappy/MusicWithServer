@@ -6,6 +6,7 @@ pub struct Chat {
     pub user_id : String          ,
     pub chat_id : usize           ,
     pub content : Option< String >,
+    pub time    : Option< usize  >,
     pub reply_to: Option< usize  >
 }
 

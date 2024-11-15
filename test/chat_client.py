@@ -70,9 +70,11 @@ async def send_message(websocket, user_id):
                 print(f'잘못된 형식: {e}')
 
         else:
-            msg = {
+            parts = message.split(' ', 1)
+            msg   = {
                 'Chat': {
-                    'content' : message,
+                    'time'    : parts[ 0 ],
+                    'content' : parts[ 1 ],
                     'reply_to': None
                 }
             }
@@ -90,7 +92,8 @@ async def receive_message(websocket):
             if reply_to is not None:
                 print(f'[{chat_id}] ([{reply_to}]에 답장) {user_id}: {content}')
             else:
-                print(f'[{chat_id}] {user_id}: {content}')
+                time = chat.get('time')
+                print(f'[{chat_id}] ({time}) {user_id}: {content}')
         else:
             print(f'[{chat_id}] 삭제됨')
 
@@ -150,8 +153,8 @@ if __name__ == '__main__':
     print('사용법:')
     print('1. user_id를 입력합니다.')
     print('2. track_id를 입력합니다.')
-    print('3. 메시지를 입력합니다.')
-    print('4. @<chat_id> <message>로 답장을 보낼 수 있습니다.')
-    print('5. !delete <chat_id>로 메시지를 삭제할 수 있습니다.')
+    print('3. <time> <message>로 댓글을 달 수 있습니다 (time은 정수).')
+    print('4. @<chat_id> <message>로 대댓글을 달 수 있습니다.')
+    print('5. !delete <chat_id>로 댓글을 삭제할 수 있습니다.')
     print('6. q를 입력하면 연결이 종료됩니다.')
     asyncio.run(chat_client())

@@ -35,6 +35,7 @@ impl State {
             user_id : user_id.to_string(),
             chat_id : history.len      (),
             content : Some(chat.content) ,
+            time    : chat.time          ,
             reply_to: chat.reply_to
         };
         let bmsg = broad::Msg::Chat(bchat.clone());
