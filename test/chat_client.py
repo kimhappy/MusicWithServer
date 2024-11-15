@@ -72,9 +72,8 @@ async def send_message(websocket, user_id):
             parts = message.split(' ', 1)
             msg   = {
                 'Chat': {
-                    'time'    : int(parts[ 0 ]),
-                    'content' : parts[ 1 ],
-                    'reply_to': None
+                    'time'   : int(parts[ 0 ]),
+                    'content': parts[ 1 ]
                 }
             }
 
