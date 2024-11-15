@@ -1,8 +1,8 @@
-use rocket::{ get, response::Redirect };
+use rocket::response::Redirect;
 use crate::{ util, env };
 
-#[get("/login")]
-pub fn login() -> Result< Redirect, String > {
+#[rocket::get("/login")]
+pub fn get_login() -> Result< Redirect, String > {
     let scope  = "user-read-private user-read-email";
     let state  = util::random_string(16);
     let params = [

@@ -1,5 +1,7 @@
-mod r_login;
-mod r_callback;
+mod login;
+mod callback;
+mod chat;
 
-pub use r_login::login;
-pub use r_callback::callback;
+pub use login::get_login;
+pub use callback::get_callback;
+pub use chat::get_chat;
