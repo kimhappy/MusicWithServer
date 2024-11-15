@@ -19,8 +19,7 @@ async def chat_client():
                     receive_task  = asyncio.create_task(receive_message(websocket))
                     done, pending = await asyncio.wait(
                         [send_task, receive_task],
-                        return_when = asyncio.FIRST_COMPLETED,
-                    )
+                        return_when = asyncio.FIRST_COMPLETED)
 
                     for task in pending:
                         task.cancel()
