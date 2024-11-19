@@ -12,20 +12,26 @@ SPOTIFY_CLIENT_ID=...
 SPOTIFY_CLIENT_SECRET=...
 SPOTIFY_REDIRECT_SERVER_URI=...
 SPOTIFY_REDIRECT_APP_URI=...
-BROADCAST_CAPACITY=100
+SP_DC=...
+BROADCAST_CAPACITY=...
 ```
-
-## 채팅 테스트 환경 준비
-```sh
-pip3 install websockets
-```
+- `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`: [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)에서 발급
+- `SPOTIFY_REDIRECT_SERVER_URI`: 서버의 `callback` endpoint (예: `http://localhost:8000/callback`)
+- `SPOTIFY_REDIRECT_APP_URI`: 앱의 `callback` endpoint (예: `com.kimhappy.musicwith://callback`)
+- `SP_DC`: [Spotify](https://spotify.com)의 `sp_dc` 쿠키값 ([참조](https://github.com/akashrchandran/syrics/wiki/Finding-sp_dc))
+- `BROADCAST_CAPACITY`: 실시간 댓글 큐 크기 (예: `100`)
 
 ## 실행
 ```sh
 cargo run --release
 ```
 
-## 채팅 테스트
+## 테스트
+### 채팅
+```sh
+pip3 install websockets
+python3 test/chat_client.py
+```
 1. 로컬에서 서버 실행, http://127.0.0.1:8000 에서 열리는 것 확인
 2. test/chat_client.py 실행 (여러 인스턴스를 생성해야 테스트할 수 있음)
 3. 출력되는 사용법에 따라 사용 가능
