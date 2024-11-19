@@ -5,7 +5,7 @@ mod chat;
 
 use std::sync::Arc;
 use rocket::{ launch, routes };
-use route::{ get_login, get_callback, get_chat };
+use route::{ get_login, get_callback, get_lyrics, get_chat };
 
 #[launch]
 fn rocket() -> _ {
@@ -14,5 +14,5 @@ fn rocket() -> _ {
 
     rocket::build()
         .manage(chat_state)
-        .mount("/", routes![get_login, get_callback, get_chat])
+        .mount("/", routes![get_login, get_callback, get_lyrics, get_chat])
 }
