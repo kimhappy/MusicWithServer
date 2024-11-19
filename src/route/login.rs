@@ -13,7 +13,7 @@ pub fn get_login() -> Result< Redirect, String > {
         ("scope"        , SCOPE                    ),
         ("state"        , &state                   )
     ];
-    let qs           = serde_urlencoded::to_string(params).unwrap();
+    let qs           = serde_urlencoded::to_string(params).map_err(|_| "Failed to serialize login data")?;
     let auth_url     = format!("https://accounts.spotify.com/authorize?{}", qs);
     Ok(Redirect::to(auth_url))
 }
