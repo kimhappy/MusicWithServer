@@ -34,7 +34,7 @@ pub async fn get_callback(code: &str, state: &str) -> Result< Redirect, String >
     let token_data: TokenResponse = token_response
         .json()
         .await
-        .unwrap();
+        .map_err(|_| "Failed to parse token data")?;
     let params = [
         ("access_token" , &token_data.access_token ),
         ("refresh_token", &token_data.refresh_token)
