@@ -2,19 +2,18 @@ use std::sync::Arc;
 use rocket::futures::{ SinkExt, StreamExt };
 use tokio::sync::broadcast;
 use rocket_ws as ws;
-use crate::chat::*;
+use crate::{ chat::client, state::State };
 
 #[rocket::get("/chat/<track_id>/<user_id>")]
 pub fn get_chat(
-    ws        : ws::WebSocket,
-    track_id  : String       ,
-    user_id   : String       ,
-    chat_state: &rocket::State< Arc< State > >
-) -> ws::Channel< 'static > {
-    let chat_state = chat_state.inner().clone();
+    ws          : ws::WebSocket,
+    track_id    : String       ,
+    user_id     : String       ,
+    server_state: &rocket::State< Arc< State > >) -> ws::Channel< 'static > {
+    let server_state = server_state.inner().clone();
 
     ws.channel(move |mut stream| Box::pin(async move {
-        let sender = match chat_state.sender(&track_id) {
+        let sender = match server_state.chat.sender(&track_id) {
             Some(sender) => sender,
             None         => {
                 eprintln!("Error making sender from {}", user_id);
@@ -24,7 +23,7 @@ pub fn get_chat(
 
         let mut receiver = sender.subscribe();
 
-        let msg = match chat_state.add_online(&track_id, &user_id) {
+        let msg = match server_state.chat.add_online(&track_id, &user_id) {
             Some(msg) => msg,
             None      => {
                 eprintln!("Error adding online from {}", user_id);
@@ -65,10 +64,10 @@ pub fn get_chat(
                 };
 
                 let (is_broadcast, msg) = match match cmsg {
-                    client::Msg::Chat   (chat   ) => chat_state.add_chat   (&track_id, &user_id, chat   ).map(|msg| (true , msg)),
-                    client::Msg::Delete (delete ) => chat_state.delete_chat(&track_id, &user_id, delete ).map(|msg| (true , msg)),
-                    client::Msg::History(history) => chat_state.get_history(&track_id          , history).map(|msg| (false, msg)),
-                    client::Msg::Online (online ) => chat_state.get_online (&track_id          , online ).map(|msg| (false, msg))
+                    client::Msg::Chat   (chat   ) => server_state.chat.add_chat   (&track_id, &user_id, chat   ).map(|msg| (true , msg)),
+                    client::Msg::Delete (delete ) => server_state.chat.delete_chat(&track_id, &user_id, delete ).map(|msg| (true , msg)),
+                    client::Msg::History(history) => server_state.chat.get_history(&track_id          , history).map(|msg| (false, msg)),
+                    client::Msg::Online (online ) => server_state.chat.get_online (&track_id          , online ).map(|msg| (false, msg))
                 } {
                     Some(im) => im,
                     None     => {
@@ -108,7 +107,7 @@ pub fn get_chat(
             }
         } }
 
-        let msg = match chat_state.remove_online(&track_id, &user_id) {
+        let msg = match server_state.chat.remove_online(&track_id, &user_id) {
             Some(msg) => msg,
             None      => {
                 eprintln!("Error removing online from {}", user_id);

@@ -1,6 +1,7 @@
+use std::sync::Arc;
 use rocket::response::Redirect;
 use serde::{ Serialize, Deserialize };
-use crate::env;
+use crate::{ env, state::State };
 
 #[derive(Serialize, Deserialize)]
 struct TokenResponse {
@@ -10,8 +11,11 @@ struct TokenResponse {
 
 // TODO: Verify state
 #[rocket::get("/callback?<code>&<state>")]
-pub async fn get_callback(code: &str, state: &str) -> Result< Redirect, String > {
-    let params              = [
+pub async fn get_callback(
+    code        : &str,
+    state       : &str,
+    server_state: &rocket::State< Arc< State > >) -> Result< Redirect, String > {
+    let params = [
         ("grant_type"  , "authorization_code"     ),
         ("code"        , code                     ),
         ("redirect_uri", &env::REDIRECT_SERVER_URI)
