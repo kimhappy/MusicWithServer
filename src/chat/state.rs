@@ -19,7 +19,10 @@ impl State {
         }
     }
 
-    pub fn sender(&self, track_id: &str) -> Option< broadcast::Sender< ws::Message > > {
+    pub fn sender(
+        &self,
+        track_id: &str
+    ) -> Option< broadcast::Sender< ws::Message > > {
         Some(self.channels
             .entry(track_id.to_string())
             .or_insert_with(|| {
@@ -29,7 +32,12 @@ impl State {
             .clone())
     }
 
-    pub fn add_chat(&self, track_id: &str, user_id: &str, chat: client::Chat) -> Option< ws::Message > {
+    pub fn add_chat(
+        &self         ,
+        track_id: &str,
+        user_id : &str,
+        chat    : client::Chat
+    ) -> Option< ws::Message > {
         let mut history = self.histories.entry(track_id.to_string()).or_insert_with(Vec::new);
         let     bchat   = broad::Chat {
             user_id : user_id.to_string(),
@@ -44,7 +52,12 @@ impl State {
         Some(ws::Message::Text(jmsg))
     }
 
-    pub fn delete_chat(&self, track_id: &str, user_id: &str, delete: Delete) -> Option< ws::Message > {
+    pub fn delete_chat(
+        &self         ,
+        track_id: &str,
+        user_id : &str,
+        delete  : Delete
+    ) -> Option< ws::Message > {
         let mut history = self.histories.entry(track_id.to_string()).or_insert_with(Vec::new);
         let     chat    = history.iter_mut().find(|c| c.chat_id == delete.chat_id)?;
 
@@ -58,7 +71,11 @@ impl State {
         Some(ws::Message::Text(jmsg))
     }
 
-    pub fn add_online(&self, track_id: &str, user_id: &str) -> Option< ws::Message > {
+    pub fn add_online(
+        &self         ,
+        track_id: &str,
+        user_id : &str
+    ) -> Option< ws::Message > {
         let mut online = self.onlines.entry(track_id.to_string()).or_insert_with(Vec::new);
 
         if online.iter().any(|id| id == user_id) {
@@ -73,7 +90,11 @@ impl State {
         Some(ws::Message::Text(jmsg))
     }
 
-    pub fn remove_online(&self, track_id: &str, user_id: &str) -> Option< ws::Message > {
+    pub fn remove_online(
+        &self         ,
+        track_id: &str,
+        user_id : &str
+    ) -> Option< ws::Message > {
         let mut online = self.onlines.entry(track_id.to_string()).or_insert_with(Vec::new);
         let     pos    = online.iter().position(|id| *id == user_id)?;
         let     bmsg   = broad::Msg::Leave(Leave {
@@ -84,7 +105,11 @@ impl State {
         Some(ws::Message::Text(jmsg))
     }
 
-    pub fn get_history(&self, track_id: &str, _history: client::History) -> Option< ws::Message > {
+    pub fn get_history(
+        &self         ,
+        track_id: &str,
+        _history: client::History
+    ) -> Option< ws::Message > {
         let history = self.histories.entry(track_id.to_string()).or_insert_with(Vec::new);
         let hmsg    = broad::Msg::History(broad::History {
             items: history.clone()
@@ -93,7 +118,11 @@ impl State {
         Some(ws::Message::Text(jmsg))
     }
 
-    pub fn get_online(&self, track_id: &str, _online: client::Online) -> Option< ws::Message > {
+    pub fn get_online(
+        &self         ,
+        track_id: &str,
+        _online : client::Online
+    ) -> Option< ws::Message > {
         let online = self.onlines.entry(track_id.to_string()).or_insert_with(Vec::new);
         let omsg   = broad::Msg::Online(broad::Online {
             items: online.clone()
