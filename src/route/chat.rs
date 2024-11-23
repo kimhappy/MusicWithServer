@@ -9,7 +9,8 @@ pub fn get_chat(
     ws          : ws::WebSocket,
     track_id    : String       ,
     user_id     : String       ,
-    server_state: &rocket::State< Arc< State > >) -> ws::Channel< 'static > {
+    server_state: &rocket::State< Arc< State > >
+) -> ws::Channel< 'static > {
     let server_state = server_state.inner().clone();
 
     ws.channel(move |mut stream| Box::pin(async move {
