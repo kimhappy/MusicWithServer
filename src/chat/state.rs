@@ -42,10 +42,10 @@ impl State {
     ) -> Option< ws::Message > {
         let history = self.histories.collection(track_id);
         let bchat   = broad::Chat {
-            user_id : user_id.to_string()                     ,
-            chat_id : history.count_documents().ok()? as usize,
-            content : Some(chat.content)                      ,
-            time    : chat.time                               ,
+            user_id : user_id.to_string()             ,
+            chat_id : uuid::Uuid::new_v4().to_string(),
+            content : Some(chat.content)              ,
+            time    : chat.time                       ,
             reply_to: chat.reply_to
         };
         let bmsg = broad::Msg::Chat(bchat.clone());
@@ -65,7 +65,7 @@ impl State {
         let jmsg    = serde_json::to_string(&bmsg).ok()?;
         let result  = history.update_one(doc! {
             "user_id": Bson::String(user_id.to_string()),
-            "chat_id": Bson::Int64(delete.chat_id as i64)
+            "chat_id": Bson::String(delete.chat_id)
         }, doc! { "$set": {
             "content": None::< String >
         } }).ok()?;

@@ -4,10 +4,10 @@ use super::{ Delete, Join, Leave };
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Chat {
     pub user_id : String          ,
-    pub chat_id : usize           ,
+    pub chat_id : String          ,
     pub content : Option< String >,
     pub time    : Option< usize  >,
-    pub reply_to: Option< usize  >
+    pub reply_to: Option< String >
 }
 
 #[derive(Clone, Serialize, Deserialize)]

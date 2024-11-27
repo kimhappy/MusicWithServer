@@ -3,9 +3,9 @@ use super::Delete;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Chat {
-    pub content : String         ,
-    pub time    : Option< usize >,
-    pub reply_to: Option< usize >
+    pub content : String          ,
+    pub time    : Option< usize  >,
+    pub reply_to: Option< String >
 }
 
 #[derive(Clone, Serialize, Deserialize)]

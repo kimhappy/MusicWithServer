@@ -40,7 +40,7 @@ async def send_message(websocket, user_id):
         elif message.startswith('@'):
             try:
                 parts    = message.split(' ', 1)
-                reply_to = int(parts[ 0 ][ 1: ])
+                reply_to = parts[ 0 ][ 1: ]
                 content  = parts[ 1 ]
                 msg      = {
                     'Chat': {

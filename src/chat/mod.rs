@@ -8,7 +8,7 @@ pub use state::State;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Delete {
-    pub chat_id: usize
+    pub chat_id: String
 }
 
 #[derive(Clone, Serialize, Deserialize)]
