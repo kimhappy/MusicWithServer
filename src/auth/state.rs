@@ -1,6 +1,5 @@
 use dashmap::DashMap;
 use chrono::prelude::*;
-use crate::util;
 
 struct Session {
     refresh_token: String,
@@ -22,14 +21,8 @@ impl State {
         &self,
         refresh_token: &str
     ) -> String {
-        let session_id = loop {
-            let id = util::random_string(32);
-
-            if !self.sessions.contains_key(&id) {
-                break id;
-            }
-        };
-        let session = Session {
+        let session_id = uuid::Uuid::new_v4().to_string();
+        let session    = Session {
             refresh_token: refresh_token.to_string(),
             expires      : Utc::now() + chrono::Duration::hours(24)
         };

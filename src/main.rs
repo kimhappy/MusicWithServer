@@ -1,5 +1,4 @@
 mod env;
-mod util;
 mod route;
 mod auth;
 mod chat;
