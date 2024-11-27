@@ -1,21 +1,23 @@
 use rocket_ws as ws;
 use tokio::sync::broadcast;
 use dashmap::DashMap;
+use polodb_core::{ Database, CollectionT, bson::{ Bson, doc } };
 use super::{ client, broad, Delete, Join, Leave };
 use crate::env;
 
 pub struct State {
     channels : DashMap< String, broadcast::Sender< ws::Message > >,
-    histories: DashMap< String, Vec              < broad::Chat > >,
-    onlines  : DashMap< String, Vec              < String      > >
+    onlines  : DashMap< String, Vec              < String      > >,
+    histories: Database
 }
 
 impl State {
-    pub fn new() -> Self {
+    pub fn new(chat_history_path: &str) -> Self {
         Self {
             channels : DashMap::new(),
-            histories: DashMap::new(),
-            onlines  : DashMap::new()
+            onlines  : DashMap::new(),
+            histories: Database::open_path(chat_history_path)
+                .expect("Failed to open chat history database")
         }
     }
 
@@ -38,17 +40,17 @@ impl State {
         user_id : &str,
         chat    : client::Chat
     ) -> Option< ws::Message > {
-        let mut history = self.histories.entry(track_id.to_string()).or_insert_with(Vec::new);
-        let     bchat   = broad::Chat {
-            user_id : user_id.to_string(),
-            chat_id : history.len      (),
-            content : Some(chat.content) ,
-            time    : chat.time          ,
+        let history = self.histories.collection(track_id);
+        let bchat   = broad::Chat {
+            user_id : user_id.to_string()                     ,
+            chat_id : history.count_documents().ok()? as usize,
+            content : Some(chat.content)                      ,
+            time    : chat.time                               ,
             reply_to: chat.reply_to
         };
         let bmsg = broad::Msg::Chat(bchat.clone());
         let jmsg = serde_json::to_string(&bmsg).ok()?;
-        history.push(bchat);
+        history.insert_one(bchat).ok()?;
         Some(ws::Message::Text(jmsg))
     }
 
@@ -58,16 +60,20 @@ impl State {
         user_id : &str,
         delete  : Delete
     ) -> Option< ws::Message > {
-        let mut history = self.histories.entry(track_id.to_string()).or_insert_with(Vec::new);
-        let     chat    = history.iter_mut().find(|c| c.chat_id == delete.chat_id)?;
+        let history = self.histories.collection::< client::Msg >(track_id);
+        let bmsg    = broad::Msg::Delete(delete.clone());
+        let jmsg    = serde_json::to_string(&bmsg).ok()?;
+        let result  = history.update_one(doc! {
+            "user_id": Bson::String(user_id.to_string()),
+            "chat_id": Bson::Int64(delete.chat_id as i64)
+        }, doc! { "$set": {
+            "content": None::< String >
+        } }).ok()?;
 
-        if chat.user_id != user_id || chat.content.is_none() {
+        if result.modified_count == 0 {
             return None
         }
 
-        let bmsg     = broad::Msg::Delete(delete.clone());
-        let jmsg     = serde_json::to_string(&bmsg).ok()?;
-        chat.content = None;
         Some(ws::Message::Text(jmsg))
     }
 
@@ -110,9 +116,10 @@ impl State {
         track_id: &str,
         _history: client::History
     ) -> Option< ws::Message > {
-        let history = self.histories.entry(track_id.to_string()).or_insert_with(Vec::new);
+        let history = self.histories.collection(track_id);
+        let found   = history.find(doc! {}).run().ok()?.into_iter().map(Result::ok).collect::< Option< Vec< _ > > >()?;
         let hmsg    = broad::Msg::History(broad::History {
-            items: history.clone()
+            items: found
         });
         let jmsg = serde_json::to_string(&hmsg).ok()?;
         Some(ws::Message::Text(jmsg))
