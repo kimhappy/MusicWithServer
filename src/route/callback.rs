@@ -1,7 +1,6 @@
 use rocket::response::Redirect;
 use crate::env;
 
-// TODO: Verify state
 #[rocket::get("/callback?<code>&<state>")]
 pub async fn get_callback(
     code : &str,

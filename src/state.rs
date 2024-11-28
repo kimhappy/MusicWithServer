@@ -6,10 +6,10 @@ pub struct State {
 }
 
 impl State {
-    pub fn new() -> Self {
+    pub fn new(chat_history_path: &str) -> Self {
         Self {
             auth: auth::State::new(),
-            chat: chat::State::new()
+            chat: chat::State::new(chat_history_path)
         }
     }
 }

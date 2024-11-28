@@ -1,5 +1,4 @@
 mod env;
-mod util;
 mod route;
 mod auth;
 mod chat;
@@ -13,7 +12,7 @@ use state::State;
 #[launch]
 fn rocket() -> _ {
     dotenvy::dotenv().ok();
-    let chat_state = Arc::new(State::new());
+    let chat_state = Arc::new(State::new(&*env::CHAT_HISTORY_DB));
 
     rocket::build()
         .manage(chat_state)
