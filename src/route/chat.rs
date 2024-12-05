@@ -7,11 +7,13 @@ use crate::{ chat::client, state::State };
 #[rocket::get("/chat/<track_id>/<user_id>")]
 pub fn get_chat(
     ws          : ws::WebSocket,
-    track_id    : String       ,
-    user_id     : String       ,
+    track_id    : &str         ,
+    user_id     : &str         ,
     server_state: &rocket::State< Arc< State > >
 ) -> ws::Channel< 'static > {
     let server_state = server_state.inner().clone();
+    let track_id     = track_id    .to_string();
+    let user_id      = user_id     .to_string();
 
     ws.channel(move |mut stream| Box::pin(async move {
         let sender = match server_state.chat.sender(&track_id) {
