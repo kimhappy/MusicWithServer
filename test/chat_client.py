@@ -1,6 +1,7 @@
 import asyncio
 import websockets
 import json
+import ssl
 
 async def chat_client():
     while True:
@@ -8,10 +9,14 @@ async def chat_client():
 
         while True:
             track_id = input('track_id: ')
-            uri      = f'ws://127.0.0.1:8000/chat/{track_id}/{user_id}'
+            uri      = f'wss://127.0.0.1:8000/chat/{track_id}/{user_id}'
+
+            ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+            ssl_context.load_verify_locations('ssl/certs.pem')
+            ssl_context.check_hostname = False
 
             try:
-                async with websockets.connect(uri) as websocket:
+                async with websockets.connect(uri, ssl = ssl_context) as websocket:
                     await websocket.send(json.dumps({ 'History': {} }))
                     await websocket.send(json.dumps({ 'Online' : {} }))
 

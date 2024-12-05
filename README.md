@@ -6,6 +6,12 @@
 rustup toolchain install nightly
 rustup default nightly
 ```
+- `ssh` 디렉토리에 `key.pem` (개인키), `certs.pem` (자체 서명 인증서) 생성
+```sh
+brew install openssl
+openssl genrsa -out key.pem 2048 # key.pem
+openssl req -new -x509 -key key.pem -out certs.pem -days 365 # certs.pem
+```
 - 프로젝트 디렉토리에 `.env` 파일 생성
 ```
 SPOTIFY_CLIENT_ID=...
@@ -34,6 +40,6 @@ cargo run --release
 pip3 install websockets
 python3 test/chat_client.py
 ```
-1. 로컬에서 서버 실행, http://127.0.0.1:8000 에서 열리는 것 확인
+1. 로컬에서 서버 실행, https://127.0.0.1:8000 에서 열리는 것 확인
 2. test/chat_client.py 실행 (여러 인스턴스를 생성해야 테스트할 수 있음)
 3. 출력되는 사용법에 따라 사용 가능
