@@ -4,7 +4,7 @@ use super::Delete;
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Chat {
     pub content : String          ,
-    pub time    : Option< usize  >,
+    pub time    : Option< f64    >,
     pub reply_to: Option< String >
 }
 
