@@ -1,15 +1,17 @@
-use crate::{ auth, chat };
+use crate::{ lyric, chat };
 
 pub struct State {
-    pub auth: auth::State,
-    pub chat: chat::State
+    pub lyric: lyric::State,
+    pub chat : chat ::State
 }
 
 impl State {
-    pub fn new(chat_history_path: &str) -> Self {
+    pub fn new(
+        lyric_cache_path : &str,
+        chat_history_path: &str) -> Self {
         Self {
-            auth: auth::State::new(),
-            chat: chat::State::new(chat_history_path)
+            lyric: lyric::State::new(lyric_cache_path ),
+            chat : chat ::State::new(chat_history_path)
         }
     }
 }
