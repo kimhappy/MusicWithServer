@@ -75,7 +75,9 @@ impl State {
             .get("items")
             .ok_or("items not found")?
             .as_array()
-            .ok_or("items is not an array")?[ 0 ]
+            .ok_or("items is not an array")?
+            .get(0)
+            .ok_or("item not found")?
             .get("id")
             .ok_or("id not found")?
             .as_str()
@@ -164,8 +166,10 @@ impl State {
     ) -> Result< Vec< Lyric >, String > {
         let collection = self.lyric_cache.collection(isrc);
 
-        if let Ok(cursor) = collection.find(doc! {}).sort(doc! { "begin": 1 }).run() {
-            return cursor.collect::< Result< Vec< _ >, _ > >().map_err(|_| "Failed to collect lyrics".to_string());
+        if let Ok(cursor) = collection.find(doc! {}).sort(doc! { "begin": 1 }).run() &&
+           let Ok(lyrics) = cursor.collect::< Result< Vec< _ >, _ > >()              &&
+           !lyrics.is_empty() {
+            return Ok(lyrics);
         }
 
         let lyrics = self.get_lyrics_impl(isrc).await?;
