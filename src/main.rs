@@ -1,4 +1,4 @@
-#![feature(let_chains)]
+#![feature(let_chains, if_let_guard)]
 
 mod env;
 mod route;
