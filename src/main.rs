@@ -8,7 +8,7 @@ mod state;
 
 use std::sync::Arc;
 use rocket::{ launch, routes };
-use route::{ get_lyrics, get_chat };
+use route::*;
 use state::State;
 
 #[launch]
@@ -20,5 +20,5 @@ fn rocket() -> _ {
 
     rocket::build()
         .manage(state)
-        .mount("/", routes![get_lyrics, get_chat])
+        .mount("/", routes![get_index, get_lyrics, get_chat])
 }
