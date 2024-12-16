@@ -8,16 +8,19 @@ rustup default nightly
 ```
 - 프로젝트 디렉토리에 `.env` 파일 생성
 ```
+PORT=...
+ADDRESS=...
 CHAT_HISTORY_DB=...
 LYRICS_CACHE_DB=...
 SP_DC=...
 BROADCAST_CAPACITY=...
 ```
+- `PORT`: 서버의 TCP 네트워크 포트 번호 (예: `8000`)
+- `ADDRESS`: 서버의 수신 주소 (예: `0.0.0.0`, `127.0.0.1`)
 - `CHAT_HISTORY_DB`: 댓글 기록을 저장할 위치 (예: `chat_history.db`)
 - `LYRICS_CACHE_DB`: 가사 캐시를 저장할 위치 (예: `lyrics_cache.db`)
 - `SP_DC`: [Spotify](https://spotify.com)의 `sp_dc` 쿠키값 ([참조](https://github.com/akashrchandran/syrics/wiki/Finding-sp_dc))
 - `BROADCAST_CAPACITY`: 실시간 댓글 큐 크기 (예: `100`)
-
 
 ## 실행
 ```sh
