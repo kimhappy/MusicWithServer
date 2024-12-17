@@ -1,3 +1,4 @@
+use std::collections::BinaryHeap;
 use rocket_ws as ws;
 use tokio::sync::broadcast;
 use dashmap::DashMap;
@@ -112,5 +113,18 @@ impl State {
         let jmsg   = serde_json::to_string(&bmsg).ok()?;
         online.remove(&my_join.user_id)?;
         Some(ws::Message::Text(jmsg))
+    }
+
+    pub fn hot(
+        &self,
+        n: usize
+    ) -> Option< Vec< Hot > > {
+        let track_ids = self.histories.list_collection_names().ok()?;
+        let nts       = track_ids.iter().filter_map(|track_id| {
+            let num_comments = self.histories.collection::< BChat >(&track_id).count_documents().ok()? as usize;
+            Some(Hot { num_comments, track_id: track_id.clone() })
+        });
+        let hots      = nts.collect::< BinaryHeap< _ > >().into_iter().take(n).collect::< Vec< _ > >();
+        Some(hots)
     }
 }

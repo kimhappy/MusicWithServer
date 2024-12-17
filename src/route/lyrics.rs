@@ -9,5 +9,5 @@ pub async fn get_lyrics(
     server_state.lyric.get_lyric(isrc)
         .await
         .map(Json)
-        .map_err(|e| format!("Failed to get lyrics: {}", e))
+        .ok_or(format!("Failed to get lyrics"))
 }
