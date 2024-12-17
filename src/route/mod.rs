@@ -1,7 +1,9 @@
 mod index;
 mod lyrics;
 mod chat;
+mod hot;
 
-pub use index::get_index;
-pub use lyrics::get_lyrics;
-pub use chat::get_chat;
+pub use index::*;
+pub use lyrics::*;
+pub use chat::*;
+pub use hot::*;
