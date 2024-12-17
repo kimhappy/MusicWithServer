@@ -1,21 +1,7 @@
 mod state;
-pub mod client;
-pub mod broad;
+mod amsg;
+mod bmsg;
 
-use serde::{ Serialize, Deserialize };
+pub use amsg::*;
+pub use bmsg::*;
 pub use state::State;
-
-#[derive(Clone, Serialize, Deserialize)]
-pub struct Delete {
-    pub chat_id: String
-}
-
-#[derive(Clone, Serialize, Deserialize)]
-pub struct Join {
-    pub user_id: String
-}
-
-#[derive(Clone, Serialize, Deserialize)]
-pub struct Leave {
-    pub user_id: String
-}
