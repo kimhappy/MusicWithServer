@@ -17,11 +17,11 @@ impl State {
         }
     }
 
-    async fn get_access_token(client: &Client) -> Result< String, String > {
+    async fn get_access_token(client: &Client) -> Option< String > {
         const USER_AGENT: &str = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.41 Safari/537.36";
 
         let jar = Arc::new(Jar::default());
-        let url = "https://open.spotify.com".parse::< Url >().map_err(|_| "Failed to parse URL")?;
+        let url = "https://open.spotify.com".parse::< Url >().ok()?;
         jar.add_cookie_str(&format!("sp_dc={}", *env::SP_DC), &url);
 
         let mut headers = header::HeaderMap::new();
@@ -31,116 +31,119 @@ impl State {
         let resp = client.get("https://open.spotify.com/get_access_token?reason=transport&productType=web_player")
             .send()
             .await
-            .map_err(|_| "Failed to send request")?;
+            .ok()?;
 
         if !resp.status().is_success() {
-            return Err("Failed to get access token".to_string());
+            return None;
         }
 
         let jvalue = resp.json::< Value >()
             .await
-            .map_err(|_| "Failed to parse JSON")?;
+            .ok()?;
 
         jvalue
             .get("accessToken")
             .and_then(|v| v.as_str())
             .map(String::from)
-            .ok_or("accessToken not found".to_string())
     }
 
-    async fn isrc_to_spotify_id(
+    async fn isrc_to_spotify_ids(
         client      : &Client,
         access_token: &str   ,
         isrc        : &str
-    ) -> Result< String, String > {
-        let search_url = format!("https://api.spotify.com/v1/search").parse::< Url >().map_err(|_| "Failed to parse URL")?;
+    ) -> Option< Vec< String > > {
+        let search_url = format!("https://api.spotify.com/v1/search").parse::< Url >().ok()?;
         let params     = [("type", "track"), ("q", &format!("isrc:{}", isrc))];
         let resp = client.get(search_url)
             .header("authorization", format!("Bearer {}", access_token))
             .query(&params)
             .send()
             .await
-            .map_err(|_| "Failed to send request")?;
+            .ok()?;
 
         if !resp.status().is_success() {
-            return Err("Failed to search track".to_string());
+            return None;
         }
 
         let jvalue = resp.json::< Value >()
             .await
-            .map_err(|_| "Failed to parse JSON")?;
+            .ok()?;
 
-        jvalue.get("tracks")
-            .ok_or("tracks not found")?
-            .get("items")
-            .ok_or("items not found")?
-            .as_array()
-            .ok_or("items is not an array")?
-            .get(0)
-            .ok_or("item not found")?
-            .get("id")
-            .ok_or("id not found")?
-            .as_str()
-            .ok_or("id is not a string")
+        Some(jvalue.get("tracks")?
+            .get("items")?
+            .as_array()?
+            .iter()
+            .flat_map(|item| item.get("id"))
+            .flat_map(|id| id.as_str())
             .map(String::from)
-            .map_err(String::from)
+            .collect::< Vec< _ > >())
     }
 
     async fn spotify_id_to_lyrics(
         client          : &Client,
-        access_token    : &str,
+        access_token    : &str   ,
         spotify_track_id: &str
-    ) -> Result< Vec< Lyric >, String > {
-            let track_url = format!("https://spclient.wg.spotify.com/color-lyrics/v2/track/{}", spotify_track_id);
-            let params    = [("format", "json"), ("market", "from_token")];
+    ) -> Option< Vec< Lyric > > {
+        let track_url = format!("https://spclient.wg.spotify.com/color-lyrics/v2/track/{}", spotify_track_id);
+        let params    = [("format", "json"), ("market", "from_token")];
 
-            let resp = client.get(&track_url)
-                .header("authorization", format!("Bearer {}", access_token))
-                .query(&params)
-                .send()
-                .await
-                .map_err(|_| "Failed to send request")?;
+        let resp = client.get(&track_url)
+            .header("authorization", format!("Bearer {}", access_token))
+            .query(&params)
+            .send()
+            .await
+            .ok()?;
 
-            if !resp.status().is_success() {
-                return Err("Failed to get lyrics".to_string());
+        if !resp.status().is_success() {
+            return None;
+        }
+
+        let jvalue = resp.json::< Value >()
+            .await
+            .ok()?;
+
+        jvalue
+            .get("lyrics")?
+            .get("lines")?
+            .as_array()?
+            .iter()
+            .map(|line| -> Option< Lyric > {
+                let begin = line.get("startTimeMs")?
+                    .as_str()?
+                    .parse::< usize >()
+                    .ok()? as f64 / 1000.0;
+                let content = line.get("words")?
+                    .as_str()?;
+                Some(Lyric { begin, content: content.to_string() })
+            }).collect::< Option< Vec< Lyric > > >()
+    }
+
+    async fn spotify_ids_to_lyrics< I: Iterator< Item = String > >(
+        client           : &Client,
+        access_token     : &str   ,
+        spotify_track_ids: I
+    ) -> Option< Vec< Lyric > > {
+        for spotify_track_id in spotify_track_ids {
+            let raw = Self::spotify_id_to_lyrics(client, access_token, &spotify_track_id).await;
+
+            println!("raw: {:?}", raw);
+
+            if let Some(lyrics) = raw {
+                return Some(lyrics);
             }
+        }
 
-            let jvalue = resp.json::< Value >()
-                .await
-                .map_err(|_| "Failed to parse JSON")?;
-
-            jvalue
-                .get("lyrics")
-                .ok_or("lyrics not found")?
-                .get("lines")
-                .ok_or("lines not found")?
-                .as_array()
-                .ok_or("lines is not an array")?
-                .iter()
-                .map(|line| -> Result< Lyric, String > {
-                    let begin = line.get("startTimeMs")
-                        .ok_or("startTimeMs not found")?
-                        .as_str()
-                        .ok_or("startTimeMs is not a string")?
-                        .parse::< usize >()
-                        .map_err(|_| "Failed to parse startTimeMs")
-                        .map(|x| x as f64 / 1000.0)?;
-                    let content = line.get("words")
-                        .ok_or("words not found")?
-                        .as_str()
-                        .ok_or("words is not a string")?;
-                    Ok(Lyric { begin, content: content.to_string() })
-                }).collect::< Result< Vec< Lyric >, String > >()
+        None
     }
 
     async fn get_lyrics_impl(
         &self,
         isrc: &str
-    ) -> Result< Vec< Lyric >, String > {
+    ) -> Option< Vec< Lyric > > {
         const USER_AGENT: &str = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.41 Safari/537.36";
 
         let jar = Arc::new(Jar::default());
-        let url = "https://open.spotify.com".parse::< Url >().map_err(|_| "Failed to parse URL")?;
+        let url = "https://open.spotify.com".parse::< Url >().ok()?;
         jar.add_cookie_str(&format!("sp_dc={}", *env::SP_DC), &url);
 
         let mut headers = header::HeaderMap::new();
@@ -152,28 +155,29 @@ impl State {
             .default_headers(headers)
             .redirect(reqwest::redirect::Policy::none())
             .build()
-            .map_err(|_| "Failed to create client")?;
+            .ok()?;
 
-        let access_token = Self::get_access_token    (&client                            ).await?;
-        let spotify_id   = Self::isrc_to_spotify_id  (&client, &access_token, isrc       ).await?;
-        let lyrics       = Self::spotify_id_to_lyrics(&client, &access_token, &spotify_id).await?;
-        Ok(lyrics)
+        let access_token = Self::get_access_token     (&client                                        ).await?;
+        let spotify_ids  = Self::isrc_to_spotify_ids  (&client, &access_token, isrc                   ).await?;
+        let lyrics       = Self::spotify_ids_to_lyrics(&client, &access_token, spotify_ids.into_iter()).await?;
+
+        Some(lyrics)
     }
 
     pub async fn get_lyric(
         &self,
         isrc: &str
-    ) -> Result< Vec< Lyric >, String > {
+    ) -> Option< Vec< Lyric > > {
         let collection = self.lyric_cache.collection(isrc);
 
         if let Ok(cursor) = collection.find(doc! {}).sort(doc! { "begin": 1 }).run() &&
            let Ok(lyrics) = cursor.collect::< Result< Vec< _ >, _ > >()              &&
            !lyrics.is_empty() {
-            return Ok(lyrics);
+            return Some(lyrics);
         }
 
-        let lyrics = self.get_lyrics_impl(isrc).await?;
-        collection.insert_many(lyrics.clone()).map_err(|_| "Failed to insert lyrics".to_string())?;
-        Ok(lyrics)
+        let lyrics = self.get_lyrics_impl(isrc).await.unwrap_or(vec![]);
+        collection.insert_many(lyrics.clone()).ok()?;
+        Some(lyrics)
     }
 }
