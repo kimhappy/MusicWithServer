@@ -1,4 +1,4 @@
-#![feature(let_chains, if_let_guard)]
+#![feature(let_chains, if_let_guard, binary_heap_into_iter_sorted)]
 
 mod env;
 mod route;

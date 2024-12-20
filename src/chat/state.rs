@@ -124,7 +124,7 @@ impl State {
             let num_comments = self.histories.collection::< BChat >(&track_id).count_documents().ok()? as usize;
             Some(Hot { num_comments, track_id: track_id.clone() })
         });
-        let hots      = nts.collect::< BinaryHeap< _ > >().into_iter().take(n).collect::< Vec< _ > >();
+        let hots      = nts.collect::< BinaryHeap< _ > >().into_iter_sorted().take(n).collect::< Vec< _ > >();
         Some(hots)
     }
 }
