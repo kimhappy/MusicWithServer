@@ -1,4 +1,4 @@
-#![feature(let_chains, if_let_guard)]
+#![feature(let_chains, if_let_guard, binary_heap_into_iter_sorted)]
 
 mod env;
 mod route;
@@ -27,5 +27,5 @@ fn rocket() -> _ {
 
     rocket::custom(config)
         .manage(state)
-        .mount("/", routes![get_index, get_lyrics, get_chat])
+        .mount("/", routes![get_index, get_hot, get_lyrics, get_chat])
 }
